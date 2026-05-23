@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css"
+          rel="stylesheet">
+
+    <title>Cadastro de produtos do Espetinho</title>
+</head>
+
+<body>
+
+    <nav class="navbar navbar-expand-lg bg-body-tertiary" style="background-color: var(--bs-primary);">
+        <div class="container-fluid">
+            <div style="display: flex; align-items: center;">
+            <a class="navbar" href="/">
+            <img src="/static/img/logo_espetinho.png" alt="Logo" width="40" height="40" class="d-inline-block align-text-top">
+            </a>
+            <h1><a href="/" style="color: #000; text-decoration: none; margin-left: 5px;"> Flask Espetinho</a></h1>
+            </div>
+            
+            <ul class="navbar-nav">
+                <li class="nav-item">
+                <a class="nav-link" href="/produto">Produtos</a>
+                </li>
+            </ul>
+        </div>
+    </nav>
+    <div class="container mt-4" >
+        <div class="card shadow">
+            <div class="card-body">
+                <h3 class="text-center mb-4">
+                    Cadastro de Produtos
+                </h3>
+
+                <form action="{{ url_for('cadastrar_produto') }}"
+                    method="POST">
+                    <div class="mb-3">
+                        <label class="form-label">
+                            Nome
+                        </label>
+                        <input type="text"
+                            name="nome"
+                            class="form-control"
+                            placeholder="Nome do produto"
+                            required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">
+                            Preço do produto
+                        </label>
+                        <input type="number"
+                            name="preco_venda"
+                            step="0.01"
+                            class="form-control"
+                            placeholder="Valor unitário do produto (R$ 0.00)"
+                            required>
+                    </div>
+
+                    <button type="submit"
+                            class="btn btn-primary w-100">
+                        Cadastrar produto
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <table class="table table-hover mt-4">
+            <thead class="table-dark">
+                <tr>
+                    <th>ID</th>
+                    <th>Nome do produto</th>
+                    <th>Preço unitário</th>
+                    <th></th>
+                </tr>
+            </thead>
+
+            <tbody>
+                {% for produto in produtos %}
+                <tr>
+                    <td>{{ produto.id}}</td>
+                    <td>{{ produto.nome }}</td>
+                    <td>R$ {{ produto.preco_venda }}</td>
+                    <td>
+                        <a href="{{ url_for('editar_produto', id=produto.id) }}"
+                        class="btn btn-danger btn-sm">
+                            Editar
+                        </a>
+                        <a href="{{ url_for('apagar_produto', id=produto.id) }}"
+                        class="btn btn-danger btn-sm">
+                            Excluir
+                        </a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</body>
+</html>

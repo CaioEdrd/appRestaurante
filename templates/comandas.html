@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css"
+          rel="stylesheet">
+
+    <title>Comandas</title>
+</head>
+
+<body>
+
+    <nav class="navbar navbar-expand-lg bg-body-tertiary" style="background-color: var(--bs-primary);">
+        <div class="container-fluid">
+            <div style="display: flex; align-items: center;">
+            <a class="navbar" href="/">
+            <img src="/static/img/logo_espetinho.png" alt="Logo" width="40" height="40" class="d-inline-block align-text-top">
+            </a>
+            <h1><a href="/" style="color: #000; text-decoration: none; margin-left: 5px;"> Flask Espetinho</a></h1>
+            </div>
+            
+            <ul class="navbar-nav">
+                <li class="nav-item">
+                <a class="nav-link" href="/produto">Produtos</a>
+                </li>
+            </ul>
+        </div>
+    </nav>
+
+    {% for categoria, mensagem in get_flashed_messages(with_categories=true) %} <!--for no dicionario de flash-->
+        <div class="alert alert-{{ categoria }} alert-dismissible fade show"> <!--classe com base na categoria de flash danger, success, alert-->
+            {{ mensagem }}
+            <button class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    {% endfor %}
+
+    <div class="container mt-4">
+        <div class="row mt-4">
+            <div class="col">
+                <div class="card p-3">
+                    <h5>Comandas Abertas</h5>
+                    <p>{{ total_abertas }}</p>
+                </div>
+            </div>
+
+            <div class="col">
+                <div class="card p-3">
+                    <h5>Últimos Pedidos</h5>
+                    {%if ultimosCinco%}
+                        {%for pedido in ultimosCinco%}
+                            <p>{{ pedido.id }}</p>
+                        {%endfor%}
+                    {%else%}
+                        <p class="text-center mb-4"> Não há comandas registradas! </p>
+                    {%endif%}
+                </div>
+            </div>
+
+
+        </div>
+        <div class="row mt-4">
+        
+            <div class="col">
+                <div class="card p-3">
+                    <h5>Comandas Fechadas</h5>
+                    <p>{{ total_fechadas }}</p>
+                </div>
+            </div>
+
+            <div class="col">
+                <div class="card p-3">
+                    <h5>Faturamento do dia</h5>               
+                    {%if total_comandas%}
+                            <p>Faturamento R$ 100</p>
+                    {%else%}
+                        <p class="text-center mb-4"> Não há comandas registradas! </p>
+                    {%endif%}
+                </div>
+            </div>
+        </div>
+
+        <div class="card h-100" style="padding-top: 20px; margin-top: 1rem;">
+            <h5 class="card-title" style="text-align: center;">Abrir Comanda</h5>
+            <form class="was-validated" novalidate="" style="padding: 20px;" method="post">
+                <div class="row">
+                    <div class="mb-3">
+                        <label for="cliente" class="form-label" >Cliente: </label>
+                        <input type="text" name="cliente" id="cliente" class="form-control" placeholder="Nome" required="">
+
+                        <label for="mesa" class="form-label" >Mesa: </label>
+                        <input type="number" name="mesa" id="mesa" class="form-control" placeholder="Nº Mesa" required="">
+                    </div>
+                    <div class="mb-3">
+                            <label for="pedido">Pedido:</label>
+                                    <table class="table table-hover mt-4">
+                                        <thead class="table-dark">
+                                                <th></th>
+                                                <th>Nome do produto</th>
+                                                <th>Preço unitário</th>
+                                                <th>Quantidade</th>
+                                        </thead>
+                                        <tbody>
+                                            {% for produto in produtos %}
+                                            <tr>
+                                                <td>{{ produto.id}}</td>
+                                                <td>{{ produto.nome }}</td>
+                                                <td>R$ {{ produto.preco_venda }}</td>
+                                                <td>
+                                                    <form action="" method="post">
+                                                        <input type="number" name="produto_quantidade" id="produto_quantidade">
+                                                    
+                                                    </form>
+                                                    
+                                                </td>
+                                            </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                    </div>
+                </div>
+                <div class="d-flex justify-content-center mt-3">
+                    <button type="submit" class="btn btn-success btn-sm" style="padding: 10px; border-radius: 10px;"> <h6>Nova Comanda</h6> </button>
+                </div>        
+                </form>     
+        </div>
+
+        <div class="card shadow" style="margin-top: 1rem;">
+            <div class="card-body">
+                <h3 class="text-center mb-4"> Comandas - {{dataHoje.strftime("%d/%m/%Y")}} </h3>
+                {%if total_comandas%}
+                    <div class="card" style="padding-top: 0;">
+                        <table class="table table-dark table-sm" style="margin-top: 0;">
+                            <thead class="table-primary">
+                                <tr>
+                                    <th class="text-center">Nº</th>
+                                    <th class="text-center">Cliente</th>
+                                    <th class="text-center">Mesa</th>
+                                    <th class="text-center">Horário pedido</th>
+                                    <th class="text-center">Status</th>
+                                    <th class="text-center">Total</th>
+                                    <th class="text-center">Ações</th>
+                                </tr>
+                            </thead>
+
+                            <tbody>
+                                {% for comanda in listaComandas %}
+                                <tr>
+                                    <td>{{ comanda.id}}</td>
+                                    <td>{{ comanda.cliente }}</td>
+                                    <td>{{ comanda.mesa }}</td>
+                                    <td>{{ comanda.horarioPedido.strftime("%H:%M")}}</td>
+                                    <td>R$ {{ comanda.total }}</td>
+                                    <td>
+                                        <a href="#"
+                                        class="btn btn-danger btn-sm">
+                                            Editar
+                                        </a>
+                                        <a href="#"
+                                        class="btn btn-danger btn-sm">
+                                            Excluir
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {%else%}
+                    <h3 class="text-center mb-4"> Não há comandas registradas! </h3>
+                    {%endif%}
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+</body>
+</html>

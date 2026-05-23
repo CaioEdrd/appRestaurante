@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css"
+          rel="stylesheet">
+
+    <title>Editar Produto</title>
+</head>
+
+<body class="container mt-4">
+    <div class="card shadow">
+        <div class="card-body">
+            <h3 class="text-center mb-4">
+                Editar Produto
+            </h3>
+            <form action="{{ url_for('atualizar_produto', id=produto.id) }}"
+                  method="POST">
+                <div class="mb-3">
+                    <label class="form-label">
+                        Nome
+                    </label>
+                    <input type="text"
+                           name="nome"
+                           class="form-control"
+                           value="{{ produto.nome }}"
+                           required>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">
+                        Preço
+                    </label>
+                    <input type="number"
+                           step="0.01"
+                           name="preco_venda"
+                           class="form-control"
+                           value="{{ produto.preco_venda }}"
+                           required>
+                </div>
+
+                <button type="submit"
+                        class="btn btn-success w-100">
+                    Atualizar
+                </button>
+            </form>
+        </div>
+    </div>
+</body>
+</html>
