@@ -13,6 +13,18 @@
 </head>
 
 <body class="container mt-4">
+
+    <nav class="navbar navbar-expand-lg bg-body-tertiary" style="background-color: var(--bs-primary);">
+        <div class="container-fluid">
+            <div style="display: flex; align-items: center; padding-left: 20px;">
+            <a class="navbar" href="/">
+            <img src="/static/img/logo_espetinho.png" alt="Logo" width="40" height="40" class="d-inline-block align-text-top">
+            </a>
+            <h1><a href="/" style="color: #000; text-decoration: none; margin-left: 5px;"> Flask Espetinho</a></h1>
+            </div>
+        </div>
+    </nav>
+    
     <div class="card shadow">
         <div class="card-body">
             <h3 class="text-center mb-4">
@@ -42,11 +54,14 @@
                            value="{{ produto.preco_venda }}"
                            required>
                 </div>
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn btn-success w-100"> Atualizar </button>
 
-                <button type="submit"
-                        class="btn btn-success w-100">
-                    Atualizar
-                </button>
+                    <a href="{{ url_for('apagar_produto', id=produto.id) }}" class="btn btn-danger">Apagar</a>
+
+                    <a href="{{ url_for('produto') }}" class="btn btn-secondary">Cancelar</a>
+                </div>
+
             </form>
         </div>
     </div>

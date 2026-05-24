@@ -24,7 +24,7 @@
             
             <ul class="navbar-nav">
                 <li class="nav-item">
-                <a class="nav-link" href="/produto">Produtos</a>
+                    <a class="btn btn-primary w-100" href="/produto">Produtos</a>
                 </li>
             </ul>
         </div>
@@ -80,64 +80,68 @@
                                 <td>{{ item.quantidade }}</td>
                                 <td>R$ {{ item.valor_unitario }}</td>
                                 <td>R$ {{item.subtotal }}</td>
-                                <td>                        
-                                    <a href="#"
+                                <td>
+                                    {% if comanda.status not in ["Cancelada", "Fechada"] %}                        
+                                    <a href="{{ url_for('editar_item', comanda_id=comanda.id, produto_id=item.produto_id) }}"
                                     class="btn btn-warning btn-sm">
                                         Editar
                                     </a>
-                                    <a href="#"
+                                    <a href="{{ url_for('apagar_item', comanda_id=comanda.id, produto_id=item.produto_id) }}"
                                         class="btn btn-danger btn-sm">
                                         Excluir
                                     </a>
+                                    {%else %}
+                                        
+                                    {%endif%}
                                 </td>
                             </tbody>
                         </table>
                     {% endfor %}
                     
-                    {%if comanda.status != "Cancelada" %}
-
-                    <form class="was-validated" novalidate="" style="padding: 20px;" method="post"> 
-                        <table class="table table-hover mt-4">
-                            <thead class="table-dark">
-                                    <th></th>
-                                    <th>Nome do produto</th>
-                                    <th>Preço unitário</th>
-                                    <th>Quantidade</th>
-                            </thead>
-                            <tbody>
-                                    {% for produto in produtos %}
+                    {% if comanda.status not in ["Cancelada", "Fechada"] %}
+                        <form class="was-validated" novalidate="" style="padding: 20px;" method="post"> 
+                            <table class="table table-hover mt-4">
+                                <thead class="table-dark">
+                                        <th></th>
+                                        <th>Nome do produto</th>
+                                        <th>Preço unitário</th>
+                                        <th>Quantidade</th>
+                                </thead>
+                                <tbody>
+                                        {% for produto in produtos %}
+                                        <tr>
+                                            <td>{{ produto.id}}</td>
+                                            <td>{{ produto.nome }}</td>
+                                            <td>R$ {{ produto.preco_venda }}</td>
+                                            <td>
+                                                <input 
+                                                    type="number"
+                                                    min="0"
+                                                    value="0"
+                                                    class="form-control"
+                                                    name="quantidade_{{ produto.id }}"
+                                                >                                                    
+                                            </td>
                                     
-                                    <tr>
-                                        <td>{{ produto.id}}</td>
-                                        <td>{{ produto.nome }}</td>
-                                        <td>R$ {{ produto.preco_venda }}</td>
-                                        <td>
-                                            <input 
-                                                type="number"
-                                                min="0"
-                                                value="0"
-                                                class="form-control"
-                                                name="quantidade_{{ produto.id }}"
-                                            >                                                    
-                                        </td>
-                                
-                                    </tr>
-                                    {% endfor %}
-                                
-                            </tbody>
-                        </table>
-                        <div class="d-flex justify-content-center mt-3">
-                            <button type="submit" class="btn btn-success btn-sm" style="padding: 10px; border-radius: 10px;"> <h6>Adicionar</h6> </button>
-                        </div>        
-                    </form> 
+                                        </tr>
+                                        {% endfor %}
+                                    
+                                </tbody>
+                            </table>
+                            <div class="d-flex justify-content-center mt-3">
+                                <button type="submit" class="btn btn-success btn-sm" style="padding: 10px; border-radius: 10px;"> <h6>Adicionar</h6> </button>
+                            </div>        
+                        </form> 
                     {%else %}
-                    <p>Não é possível adicionar itens em uma comanda cancelada</p>
+                        <br>
+                        <p>Não é possível adicionar itens em uma comanda {{comanda.status.lower()}}</p>
                     {%endif%}
+                    <a href="{{ url_for('comandas') }}" class="btn btn-secondary">Voltar</a>
 
                 </div>
             </div>
         </div>
-        
+
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>

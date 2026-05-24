@@ -26,10 +26,8 @@ def comandas():
 
         total = 0
 
-        # GERA ID
         comanda_id = len(listaComandas) + 1
 
-        # VERIFICA SE JÁ EXISTE COMANDA ABERTA
         for c in listaComandas:
 
             if (
@@ -41,7 +39,7 @@ def comandas():
                 flash("Mesa com comanda aberta!", "danger")
 
                 return redirect(url_for("comandas"))
-
+        
         for produto in produtos:
 
             quantidade = request.form.get(
@@ -57,8 +55,8 @@ def comandas():
                     "produto_id": produto["id"],
                     "nome": produto["nome"],
                     "valor_unitario": produto["preco_venda"],
-                    "quantidade": quantidade,
-                    "subtotal": subtotal}
+                    "quantidade": int(quantidade),
+                    "subtotal": float(subtotal)}
 
                 pedido.append(item)
                 total += subtotal
@@ -71,9 +69,17 @@ def comandas():
             "horarioPagamento": "-",
             "status": "Aberta",
             "pedido": pedido,
-            "total": total,
+            "total": float(total),
             "observacao": request.form.get("observacao"),
         }
+
+        if comanda["cliente"] == "":
+            flash("É necessário colocar o nome do cliente", "danger")
+            return redirect(url_for("comandas"))
+
+        if comanda["mesa"] == "":
+            flash("É necessário colocar a mesa do cliente", "danger")
+            return redirect(url_for("comandas"))
 
         if total > 0:
             listaComandas.append(comanda)
@@ -124,12 +130,14 @@ def detalhe_comanda(id):
                 tempo_str = str(diferenca)
                 tempo_aberta = tempo_str.split(".")[0]
             break    
+
     if request.method=="POST":
         for produto in produtos:
             quantidade = request.form.get(
                 f'quantidade_{produto["id"]}'
-            )
-            quantidade = int(quantidade)
+            ) 
+            
+            quantidade = int(quantidade) or 0
 
             if quantidade > 0:
                 subtotal = (quantidade *float(produto["preco_venda"]) )
@@ -137,26 +145,50 @@ def detalhe_comanda(id):
                 item = {
                         "produto_id": produto["id"],
                         "nome": produto["nome"],
-                        "valor_unitario": produto["preco_venda"],
-                        "quantidade": quantidade,
-                        "subtotal":subtotal}
+                        "valor_unitario": float(produto["preco_venda"]),
+                        "quantidade": int(quantidade),
+                        "subtotal":float(subtotal)}
                 
                 produto_existe = False
 
                 for i in comanda["pedido"]:
                     if i["nome"] == item["nome"]:
+                        # INCREMENTA QUANTIDADE
                         i["quantidade"] += item["quantidade"]
-                        i["subtotal"]+=subtotal
-                        comanda["total"]+=subtotal
-                        flash("Quantidade atualizada com sucesso!", "success")
-                        produto_existe=True
-                        return redirect(url_for('detalhe_comanda', id=id))
 
-                    elif not produto_existe:
-                        comanda["pedido"].append(item)
-                        comanda["total"]+=subtotal
-                        flash("Item adicionado com sucesso!", "success")
-                        return redirect(url_for('detalhe_comanda', id=id))
+                        # RECALCULA SUBTOTAL
+                        i["subtotal"] = (
+                            int(i["quantidade"]) *
+                            float(i["valor_unitario"])
+                        )
+
+                        produto_existe = True
+
+                        flash(
+                            "Quantidade atualizada com sucesso!",
+                            "success"
+                        )
+
+                        break
+
+
+                if not produto_existe:
+
+                    comanda["pedido"].append(item)
+
+                    flash(
+                        "Item adicionado com sucesso!",
+                        "success"
+                    )
+
+                comanda["total"] = sum(
+                    float(item["subtotal"])
+                    for item in comanda["pedido"]
+                )
+
+                return redirect(
+                    url_for('detalhe_comanda', id=id)
+                )
     return render_template('comanda_detalhe.html', comanda = comanda, tempo_aberta=tempo_aberta, produtos=produtos)
 
 @app.route('/comanda/<int:id>/editar', methods = ["GET", "POST"])
@@ -166,12 +198,15 @@ def editar_comanda(id):
         if comanda is not None:
             comanda['cliente'] = request.form.get('cliente')
             comanda['mesa'] = request.form.get('mesa')
-            comanda['status'] = request.form.get('status')
+            if comanda['status'] != "Fechada":
+                comanda['status'] = request.form.get('status')
+            else:
+                comanda['status'] = "Fechada"
             if comanda['status'] != "Aberta":
                 comanda['horarioPagamento'] = datetime.now()
         flash("Comanda Editada com Sucesso", "success")
         
-        return redirect("url_for('comandas')")
+        return redirect(url_for('comandas'))
 
     return render_template('comanda_editar.html', listaComandas=listaComandas, comanda=comanda)
 
@@ -189,6 +224,77 @@ def cancelar_comanda(id):
     comanda['horarioPagamento'] = datetime.now()
     
     return redirect(url_for("comandas"))
+
+@app.route('/comanda/<int:comanda_id>/item/<int:produto_id>/editar', methods=['GET', 'POST'])
+def editar_item(comanda_id, produto_id):
+    comanda = next(
+        (c for c in listaComandas if c["id"] == comanda_id),
+        None)
+
+    if comanda is None:
+        return "Comanda não encontrada"
+
+    item = next(
+        (i for i in comanda["pedido"]
+         if i["produto_id"] == produto_id),
+        None)
+
+    if item is None:
+        return "Item não encontrado"
+
+    if request.method == "POST":
+
+        quantidade = int(request.form.get("quantidade"))
+
+        item["quantidade"] = quantidade
+
+        item["subtotal"] = (
+            quantidade *
+            float(item["valor_unitario"]))
+
+        comanda["total"] = sum(
+            i["subtotal"]
+            for i in comanda["pedido"])
+
+        flash("Item atualizado com sucesso!", "success")
+
+        return redirect(
+            url_for(
+                'detalhe_comanda',
+                id=comanda_id)
+        )
+
+    return render_template(
+        'item_editar.html',
+        comanda=comanda,
+        item=item
+    )
+@app.route(
+    '/comanda/<int:comanda_id>/item/<int:produto_id>/apagar'
+)
+def apagar_item(comanda_id, produto_id):
+    comanda = next(
+        (c for c in listaComandas if c["id"] == comanda_id),
+        None)
+
+    if comanda is None:
+        return "Comanda não encontrada"
+
+    comanda["pedido"] = [
+        i for i in comanda["pedido"]
+        if i["produto_id"] != produto_id]
+
+    comanda["total"] = sum(
+        i["subtotal"]
+        for i in comanda["pedido"])
+
+    flash("Item apagado com sucesso!", "success")
+
+    return redirect(
+        url_for(
+            'detalhe_comanda',
+            id=comanda_id)
+    )
 
 @app.route('/produto')
 def produto():
