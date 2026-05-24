@@ -15,56 +15,180 @@ contador_id = 1
 def comandas():
     comandas_abertas = []
     comandas_fechadas = []
-    ultimosCinco =[]
+    ultimosCinco = []
+    faturamento = 0
+
     dataHoje = datetime.now()
 
-    total_comandas = len(listaComandas)
-    total_abertas = len(comandas_abertas)
-    total_fechadas = len(comandas_fechadas) 
-
     if request.method == "POST":
-        comanda_id=1
 
-        for p in produtos:        
-            pedido={
-                "item" : p.nome,
-                "valor": p.preco_venda,
-                "quantidade": request.form.get("produto_quantidade")
-            }
+        pedido = []
 
-            
-            comanda = {
-                "id" : comanda_id,
-                "cliente": request.form.get("cliente"),
-                "mesa": request.form.get("mesa"),
-                "horarioPedido":datetime.now(),
-                "status": "Aberta",
-                "total": 0,
-            }
-            
-            for u in listaComandas:
-                if u["mesa"] == comanda.mesa and u["status"] == "Aberta":
-                    flash("Mesa com comanda aberta!", "danger")
-                    break
-                else:
-                    comanda_id +=1
-                    listaComandas.append(comanda)
-                    flash("Comanda aberta com sucesso!", "success")
+        total = 0
 
-    if total_comandas > 0:
+        # GERA ID
+        comanda_id = len(listaComandas) + 1
 
-        for u in listaComandas:
-            if u["status"] =="Aberta":
-                comandas_abertas.append(u)
+        # VERIFICA SE JÁ EXISTE COMANDA ABERTA
+        for c in listaComandas:
 
-        for f in listaComandas:
-            if f["status"] =="Fechada":
-                comandas_fechadas.append(f) 
-             
-        ultimosCinco = listaComandas[-5:][::-1]
+            if (
+                str(c["mesa"]) == request.form.get("mesa")
+                and
+                c["status"] == "Aberta"
+            ):
 
-    return render_template('comandas.html', listaComandas=listaComandas, ultimosCinco=ultimosCinco, total_abertas=total_abertas, total_fechadas=total_fechadas, total_comandas=total_comandas, dataHoje=dataHoje, produtos=produtos)
+                flash("Mesa com comanda aberta!", "danger")
 
+                return redirect(url_for("comandas"))
+
+        for produto in produtos:
+
+            quantidade = request.form.get(
+                f'quantidade_{produto["id"]}'
+            )
+
+            quantidade = int(quantidade)
+
+            if quantidade > 0:
+                subtotal = (quantidade *float(produto["preco_venda"]) )
+
+                item = {
+                    "produto_id": produto["id"],
+                    "nome": produto["nome"],
+                    "valor_unitario": produto["preco_venda"],
+                    "quantidade": quantidade,
+                    "subtotal": subtotal}
+
+                pedido.append(item)
+                total += subtotal
+
+        comanda = {
+            "id": comanda_id,
+            "cliente": request.form.get("cliente"),
+            "mesa": request.form.get("mesa"),
+            "horarioPedido": datetime.now(),
+            "horarioPagamento": "-",
+            "status": "Aberta",
+            "pedido": pedido,
+            "total": total,
+            "observacao": request.form.get("observacao"),
+        }
+
+        if total > 0:
+            listaComandas.append(comanda)
+
+            flash("Comanda aberta com sucesso!", "success")
+
+            return redirect(url_for("comandas"))
+        else:
+            flash("Não há itens na comanda", "danger")
+            return redirect(url_for("comandas"))
+
+
+    # KPIs
+    total_comandas = len(listaComandas)
+
+    for c in listaComandas:
+
+        if c["status"] == "Aberta":
+            comandas_abertas.append(c)
+
+        elif c["status"] == "Fechada":
+            comandas_fechadas.append(c)
+
+    total_abertas = len(comandas_abertas)
+
+    total_fechadas = len(comandas_fechadas)
+
+    ultimosCinco = listaComandas[-5:][::-1]
+    
+    for c in listaComandas:
+        faturamento += c["total"]
+
+    return render_template( 'comandas.html', listaComandas=listaComandas,  ultimosCinco=ultimosCinco,total_abertas=total_abertas, total_fechadas=total_fechadas, total_comandas=total_comandas, dataHoje=dataHoje, produtos=produtos, faturamento=faturamento)
+
+@app.route('/comanda/<int:id>', methods = ["GET", "POST"])
+def detalhe_comanda(id):
+    tempo_aberta = datetime.now()
+    comanda = None
+    for i in listaComandas:
+        if i["id"] == id:
+            comanda = i  # Encontrou a comanda!
+            if comanda["horarioPagamento"] == "-":
+                diferenca = datetime.now() - comanda["horarioPedido"]
+                tempo_str = str(diferenca)
+                tempo_aberta = tempo_str.split(".")[0]
+            else:
+                diferenca = comanda["horarioPagamento"] - comanda["horarioPedido"]
+                tempo_str = str(diferenca)
+                tempo_aberta = tempo_str.split(".")[0]
+            break    
+    if request.method=="POST":
+        for produto in produtos:
+            quantidade = request.form.get(
+                f'quantidade_{produto["id"]}'
+            )
+            quantidade = int(quantidade)
+
+            if quantidade > 0:
+                subtotal = (quantidade *float(produto["preco_venda"]) )
+
+                item = {
+                        "produto_id": produto["id"],
+                        "nome": produto["nome"],
+                        "valor_unitario": produto["preco_venda"],
+                        "quantidade": quantidade,
+                        "subtotal":subtotal}
+                
+                produto_existe = False
+
+                for i in comanda["pedido"]:
+                    if i["nome"] == item["nome"]:
+                        i["quantidade"] += item["quantidade"]
+                        i["subtotal"]+=subtotal
+                        comanda["total"]+=subtotal
+                        flash("Quantidade atualizada com sucesso!", "success")
+                        produto_existe=True
+                        return redirect(url_for('detalhe_comanda', id=id))
+
+                    elif not produto_existe:
+                        comanda["pedido"].append(item)
+                        comanda["total"]+=subtotal
+                        flash("Item adicionado com sucesso!", "success")
+                        return redirect(url_for('detalhe_comanda', id=id))
+    return render_template('comanda_detalhe.html', comanda = comanda, tempo_aberta=tempo_aberta, produtos=produtos)
+
+@app.route('/comanda/<int:id>/editar', methods = ["GET", "POST"])
+def editar_comanda(id):
+    comanda = next((i for i in listaComandas if i['id'] == id), None)
+    if request.method == "POST":
+        if comanda is not None:
+            comanda['cliente'] = request.form.get('cliente')
+            comanda['mesa'] = request.form.get('mesa')
+            comanda['status'] = request.form.get('status')
+            if comanda['status'] != "Aberta":
+                comanda['horarioPagamento'] = datetime.now()
+        flash("Comanda Editada com Sucesso", "success")
+        
+        return redirect("url_for('comandas')")
+
+    return render_template('comanda_editar.html', listaComandas=listaComandas, comanda=comanda)
+
+@app.route('/comanda/<int:id>/apagar')
+def apagar_comanda(id):
+    global listaComandas
+    listaComandas = [c for c in listaComandas if c['id'] != id]
+    return redirect(url_for('comandas'))
+
+@app.route('/comanda/<int:id>/cancelar', methods = ["GET", "POST"])
+def cancelar_comanda(id):
+    comanda = next((i for i in listaComandas if i['id'] == id), None)
+
+    comanda['status'] = "Cancelada"
+    comanda['horarioPagamento'] = datetime.now()
+    
+    return redirect(url_for("comandas"))
 
 @app.route('/produto')
 def produto():

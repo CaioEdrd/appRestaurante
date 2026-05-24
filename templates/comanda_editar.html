@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css"
+          rel="stylesheet">
+
+    <title>Comanda {{comanda.id}}</title>
+</head>
+
+<body>
+
+    <nav class="navbar navbar-expand-lg bg-body-tertiary" style="background-color: var(--bs-primary);">
+        <div class="container-fluid">
+            <div style="display: flex; align-items: center;">
+            <a class="navbar" href="/">
+            <img src="/static/img/logo_espetinho.png" alt="Logo" width="40" height="40" class="d-inline-block align-text-top">
+            </a>
+            <h1><a href="/" style="color: #000; text-decoration: none; margin-left: 5px;"> Flask Espetinho</a></h1>
+            </div>
+            
+            <ul class="navbar-nav">
+                <li class="nav-item">
+                <a class="nav-link" href="/produto">Produtos</a>
+                </li>
+            </ul>
+        </div>
+    </nav>
+
+    {% for categoria, mensagem in get_flashed_messages(with_categories=true) %} <!--for no dicionario de flash-->
+        <div class="alert alert-{{ categoria }} alert-dismissible fade show"> <!--classe com base na categoria de flash danger, success, alert-->
+            {{ mensagem }}
+            <button class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    {% endfor %}
+
+<div class="card shadow">
+        <div class="card-body">
+            <h3 class="text-center mb-4">
+                Editar Comanda #{{comanda.id}}
+            </h3>
+        {%if comanda.status != "Cancelada" %}
+            <form action="{{ url_for('editar_comanda', id=comanda.id) }}"
+                  method="POST">
+                <div class="mb-3">
+                    <label class="form-label">
+                        Cliente
+                    </label>
+                    <input type="text"
+                           name="cliente"
+                           id="cliente"
+                           class="form-control"
+                           value="{{ comanda.cliente }}"
+                           required>
+                 </div>
+
+                <div class="mb-3">
+                    <label class="form-label">
+                        Mesa
+                    </label>
+                    <input type="number"
+                           name="mesa"
+                           class="form-control"
+                           value="{{ comanda.mesa }}"
+                           required>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">
+                        Status
+                    </label>
+                        <select class="form-select" name="status" id="status">
+                            <option value="Aberta" {{ 'selected' if comanda.status == 'Aberta' else '' }}>Aberta</option>
+                            
+                            <option value="Fechada" {{ 'selected' if comanda.status == 'Fechada' else '' }}>Fechada</option>
+                            
+                            <option value="Inadimplente" {{ 'selected' if comanda.status == 'Inadimplente' else '' }}>Inadimplente</option>
+                        </select>
+                        <button class="btn"><a href="{{url_for('cancelar_comanda', id=comanda.id)}}" class="btn btn-danger w-100">Cancelar</a></button>
+                </div>
+
+
+                <button type="submit"
+                        class="btn btn-success w-100">
+                    Atualizar
+                </button>
+            </form>
+
+        {%else%}
+            <h1 class="text-center">Não é possível editar comanda Cancelada</h1 class="text-center">
+            <div class="row mt-4">
+                <div class="col">
+                    <div class="card p-3">
+                        <p>Cliente - {{comanda.cliente}}</p>
+                        <p>Mesa - {{comanda.mesa}}</p>
+                        <p>Status - {{comanda.status}}</p>
+                        <p>Horário de abertura - {{comanda.horarioPedido.strftime("%H:%M")}}</p>
+                        <p>Horário de cancelamento - {{comanda.horarioPagamento.strftime("%H:%M")}}</p>
+                    </div>
+                </div>
+            </div>
+        {%endif%}
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+</body>
+</html>
