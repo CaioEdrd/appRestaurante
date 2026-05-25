@@ -42,7 +42,8 @@
             <div class="card-body">
                 <h3 class="text-center mb-4">Editar Comanda #{{ comanda.id }}</h3>
 
-                {% if comanda.status != "Paga" %}
+                <!-- Corrigido: bloqueia Paga E Inadimplente -->
+                {% if comanda.status == "Aberta" %}
                 <form action="{{ url_for('editar_comanda', id=comanda.id) }}" method="POST">
 
                     <div class="mb-3">

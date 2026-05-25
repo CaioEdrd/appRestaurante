@@ -198,8 +198,9 @@
                             <td>{{ comanda.cliente }}</td>
                             <td class="text-center">{{ comanda.mesa }}</td>
                             <td class="text-center">{{ comanda.horarioPedido.strftime("%H:%M") }}</td>
+                            <!-- Corrigido: inclui Inadimplente na condição de encerramento -->
                             <td class="text-center">
-                                {% if comanda.status == "Paga" %}
+                                {% if comanda.horarioPagamento is not none %}
                                     {{ comanda.horarioPagamento.strftime("%H:%M") }}
                                 {% else %}
                                     —
@@ -214,8 +215,9 @@
                                     <span class="badge bg-danger">Inadimplente</span>
                                 {% endif %}
                             </td>
+                            <!-- Corrigido: comanda.pedido → comanda.itens -->
                             <td>
-                                {% for item in comanda.pedido %}
+                                {% for item in comanda.itens %}
                                     {{ item.nome }} ({{ item.quantidade }})<br>
                                 {% endfor %}
                             </td>

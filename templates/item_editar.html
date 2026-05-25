@@ -69,7 +69,7 @@
                     <div class="d-flex gap-2">
                         <button type="submit" class="btn btn-success">Atualizar item</button>
                         <a href="{{ url_for('detalhe_comanda', id=comanda.id) }}" class="btn btn-secondary">Voltar</a>
-                        <a href="{{ url_for('apagar_item', comanda_id=comanda.id, produto_id=item.produto_id) }}"
+                        <a href="{{ url_for('apagar_item', comanda_id=comanda.id, item_id=item.id) }}"
                            class="btn btn-danger">Apagar item</a>
                     </div>
                 </form>

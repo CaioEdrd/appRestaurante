@@ -90,7 +90,8 @@
             <div class="col-6 col-md-3">
                 <div class="card h-100 text-center p-3">
                     <small class="text-muted text-uppercase fw-semibold">Qtd. de itens</small>
-                    <span class="fs-3 fw-bold mt-1">{{ comanda.pedido | sum(attribute='quantidade') }}</span>
+                    <!-- Corrigido: comanda.pedido → comanda.itens -->
+                    <span class="fs-3 fw-bold mt-1">{{ comanda.itens | sum(attribute='quantidade') }}</span>
                 </div>
             </div>
 
@@ -105,7 +106,8 @@
                 <div class="card h-100 text-center p-3">
                     <small class="text-muted text-uppercase fw-semibold">Encerramento</small>
                     <span class="fs-5 fw-bold mt-1">
-                        {% if comanda.horarioPagamento == "-" %}
+                        <!-- Corrigido: comparação com None em vez de "-" -->
+                        {% if comanda.horarioPagamento is none %}
                             Em aberto
                         {% else %}
                             {{ comanda.horarioPagamento.strftime("%d/%m %H:%M") }}
@@ -140,7 +142,8 @@
                         </tr>
                     </thead>
                     <tbody>
-                        {% for item in comanda.pedido %}
+                        <!-- Corrigido: comanda.pedido → comanda.itens -->
+                        {% for item in comanda.itens %}
                         <tr>
                             <td>{{ item.nome }}</td>
                             <td>{{ item.quantidade }}</td>
@@ -148,9 +151,10 @@
                             <td>R$ {{ "%.2f"|format(item.subtotal | float) }}</td>
                             <td>
                                 {% if comanda.status == "Aberta" %}
-                                    <a href="{{ url_for('editar_item', comanda_id=comanda.id, produto_id=item.produto_id) }}"
+                                    <!-- Corrigido: produto_id=item.produto_id → item_id=item.id -->
+                                    <a href="{{ url_for('editar_item', comanda_id=comanda.id, item_id=item.id) }}"
                                        class="btn btn-warning btn-sm">Editar</a>
-                                    <a href="{{ url_for('apagar_item', comanda_id=comanda.id, produto_id=item.produto_id) }}"
+                                    <a href="{{ url_for('apagar_item', comanda_id=comanda.id, item_id=item.id) }}"
                                        class="btn btn-danger btn-sm">Excluir</a>
                                 {% endif %}
                             </td>
